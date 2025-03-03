@@ -1,7 +1,11 @@
 import requests
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 API_URL = "https://api.api-ninjas.com/v1/animals"
-API_KEY = "qPpM4DtHmnoi0XzTKwMhAQ==gtvD7JXxzRmxWPo1"
+API_KEY = os.getenv("API_KEY")
 HEADERS = {"X-Api-Key": API_KEY}
 
 def fetch_data(animal_names):
@@ -9,6 +13,10 @@ def fetch_data(animal_names):
     Fetches the animals' data for the given list of animal names.
     Returns a list of dictionaries, each representing an animal.
     """
+    if not API_KEY:
+        print("Error: API key is missing. Please check your .env file.")
+        return []
+
     animals_data = []
 
     for animal_name in animal_names:
