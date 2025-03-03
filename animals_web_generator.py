@@ -1,32 +1,4 @@
-import requests
-
-API_URL = "https://api.api-ninjas.com/v1/animals"
-API_KEY = "qPpM4DtHmnoi0XzTKwMhAQ==gtvD7JXxzRmxWPo1"
-HEADERS = {"X-Api-Key": API_KEY}
-
-while True:
-    user_input = input("Enter one or more animal names (comma-separated): ").strip()
-    if user_input:
-        break
-    print("Error: You must enter at least one animal name.")
-
-animal_names = [name.strip() for name in user_input.split(",")]
-
-animals_data = []
-for animal in animal_names:
-    try:
-        response = requests.get(API_URL, headers=HEADERS, params={"name": animal})
-        response.raise_for_status()
-        data = response.json()
-
-        if not data:
-            print(f"Warning: No data found for '{animal}'.")
-        else:
-            animals_data.extend(data)
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching data for '{animal}': {e}")
-        exit(1)
-
+import data_fetcher
 
 def serialize_animal(animal):
     name = animal.get("name", "Unknown")
@@ -55,19 +27,30 @@ def serialize_animal(animal):
     </li>
     '''
 
+def generate_website():
+    user_input = input("Enter one or more animal names (comma-separated): ").strip()
 
-try:
-    with open("animals_template.html", "r", encoding="utf-8") as file:
-        template_content = file.read()
-except FileNotFoundError:
-    print("Error: The template file 'animals_template.html' was not found.")
-    exit(1)
-except Exception as e:
-    print(f"Error reading template file: {e}")
-    exit(1)
+    if not user_input:
+        print("Error: You must enter at least one animal name.")
+        return
 
+    animal_names = [name.strip() for name in user_input.split(",")]
+    animals_data = data_fetcher.fetch_data(animal_names)
 
-def main():
+    if not animals_data:
+        print("No valid data available. Exiting.")
+        return
+
+    try:
+        with open("animals_template.html", "r", encoding="utf-8") as file:
+            template_content = file.read()
+    except FileNotFoundError:
+        print("Error: The template file 'animals_template.html' was not found.")
+        return
+    except Exception as e:
+        print(f"Error reading template file: {e}")
+        return
+
     animals_output = "".join(serialize_animal(animal) for animal in animals_data)
 
     updated_html_content = template_content.replace("__REPLACE_ANIMALS_INFO__", animals_output)
@@ -78,8 +61,6 @@ def main():
         print("animals.html has been created successfully.")
     except Exception as e:
         print(f"Error writing to 'animals.html': {e}")
-        exit(1)
-
 
 if __name__ == "__main__":
-    main()
+    generate_website()
